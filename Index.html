@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>N-kiel Course Store</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    :root {
+      --accent: #2b6cb0;
+      --muted: #666;
+      --card: #fff;
+      --bg: #f6f8fb;
+      --danger: #e53e3e;
+    }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: var(--bg);
+      color: #222;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 24px auto;
+      padding: 16px;
+    }
+    header {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+    .brand {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .logo {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, var(--accent), #6bb6ff);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    }
+    .title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+    .controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    input[type="search"], select {
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      outline: none;
+    }
+    button {
+      background: var(--accent);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+    }
+    button.ghost {
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid #dbeafe;
+    }
+    main {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 18px;
+      align-items: start;
+    }
+    .course-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      gap: 14px;
+    }
+    .card {
+      background: var(--card);
+      padding: 12px;
+      border-radius: 10px;
+      box-shadow: 0 6px 18px rgba(15,23,42,0.06);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .course-image {
+      height: 140px;
+      background: #f2f6ff;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .course-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+    }
+    .course-title {
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .course-instructor {
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .course-meta {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+      margin-top: 6px;
+    }
+    .details-item {
+      font-size: 13px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .price {
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .rating {
+      font-size: 13px;
+      color: #f6a623;
+    }
+    .spaces {
+      font-size: 13px;
+      color: #2b6cb0;
+      font-weight: 600;
+    }
+    .cart {
+      background: var(--card);
+      padding: 12px;
+      border-radius: 10px;
+      box-shadow: 0 6px 18px rgba(15,23,42,0.06);
+      max-height: 80vh;
+      overflow: auto;
+    }
+    .cart h3 {
+      margin: 0 0 8px 0;
+    }
+    .cart-item {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .cart-thumb {
+      width: 56px;
+      height: 72px;
+      background: #f2f6ff;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent);
+      font-weight: 700;
+    }
+    .cart-details {
+      flex: 1;
+    }
+    .cart-title {
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .cart-controls {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      margin-top: 6px;
+    }
+    .qty-btn {
+      background: #eef2ff;
+      border: none;
+      padding: 6px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .remove {
+      background: transparent;
+      color: var(--danger);
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 12px;
+      font-weight: 700;
+    }
+    .empty {
+      color: var(--muted);
+      padding: 16px 0;
+      text-align: center;
+    }
+    .add-form {
+      margin-top: 12px;
+      display: grid;
+      gap: 8px;
+    }
+    textarea,
+    input[type="text"],
+    input[type="number"] {
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+      outline: none;
+    }
+    .row {
+      display: flex;
+      gap: 8px;
+    }
+    @media (max-width: 900px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+      .cart {
+        order: 2;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app" class="container">
+    <header>
+      <div class="brand">
+        <div class="logo">NK</div>
+        <div>
+          <div class="title">N-kiel Course Store</div>
+          <div style="font-size: 12px; color: var(--muted)">Single-page demo</div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <input type="search" v-model="query" placeholder="Search by title or instructor" />
+        <select v-model="selectedCategory">
+          <option value="">All categories</option>
+          <option v-for="c in categories" :key="c" :value="c">{{ c }}</option>
+        </select>
+        <select v-model="sortBy">
+          <option value="featured">Featured</option>
+          <option value="subjectAsc">Subject: A → Z</option>
+          <option value="subjectDesc">Subject: Z → A</option>
+          <option value="locationAsc">Location: A → Z</option>
+          <option value="locationDesc">Location: Z → A</option>
+          <option value="priceAsc">Price: Low → High</option>
+          <option value="priceDesc">Price: High → Low</option>
+          <option value="spacesAsc">Availability: Low → High</option>
+          <option value="spacesDesc">Availability: High → Low</option>
+          <option value="ratingAsc">Rating: Low → High</option>
+          <option value="ratingDesc">Rating: High → Low</option>
+        </select>
+        <button @click="showAdd = true">Add Course</button>
+      </div>
+    </header>
+
+    <main>
+      <section>
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+          <div style="font-weight: 700">{{ filteredCourses.length }} courses found</div>
+          <div style="font-size: 13px; color: var(--muted)">Showing results</div>
+        </div>
+
+        <div class="course-grid">
+          <div class="card" v-for="course in filteredCourses" :key="course.id">
+            <div class="course-image">{{ course.title.split(' ').slice(0, 2).map(w => w[0]).join('') }}</div>
+            <div class="course-info">
+              <div class="course-title">{{ course.title }}</div>
+              <div class="course-instructor">by {{ course.instructor }}</div>
+              <div class="course-meta">
+                <div class="details-item price">{{ formatPrice(course.price) }}</div>
+                <div class="details-item">Subject: {{ course.subject }}</div>
+                <div class="details-item">Location: {{ course.location }}</div>
+                <div class="details-item spaces">Spaces: {{ course.spaces }}</div>
+                <div style="margin-left: auto; display: flex; gap: 4px; margin-top: 8px;">
+                  <button
+                    @click="addToCart(course)"
+                    :disabled="course.spaces === 0"
+                    :title="course.spaces === 0 ? 'No spaces left' : ''"
+                  >
+                    Add to cart
+                  </button>
+                  <button
+                    @click="removeCourse(course.id)"
+                    style="background: #e53e3e; border: none; color: #fff; cursor: pointer; padding: 8px 12px; border-radius: 8px;"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div
+            v-if="filteredCourses.length === 0"
+            style="grid-column: 1 / -1; padding: 16px; background: #fff; border-radius: 8px; text-align: center; color: var(--muted)"
+          >
+            No courses matched your search.
+          </div>
+        </div>
+      </section>
+
+      <aside class="cart">
+        <h3>Cart</h3>
+        <div v-if="cartItems.length === 0" class="empty">Your cart is empty</div>
+
+        <div v-for="item in cartItems" :key="item.course.id" class="cart-item">
+          <div class="cart-thumb">{{ item.course.title.split(' ').slice(0, 1).map(w => w[0]).join('') }}</div>
+          <div class="cart-details">
+            <div class="cart-title">{{ item.course.title }}</div>
+            <div style="font-size: 13px; color: var(--muted)">{{ item.course.instructor }}</div>
+            <div class="cart-controls">
+              <button class="qty-btn" @click="decreaseQty(item.course.id)">−</button>
+              <div style="padding: 6px 10px; border-radius: 6px; background: #f8fafc">{{ item.qty }}</div>
+              <button
+                class="qty-btn"
+                @click="increaseQty(item.course.id)"
+                :disabled="item.course.spaces === 0"
+                :title="item.course.spaces === 0 ? 'No more spaces available' : ''"
+              >
+                +
+              </button>
+              <div style="margin-left: auto; font-weight: 700">{{ formatPrice(item.course.price * item.qty) }}</div>
+            </div>
+            <div>
+              <button class="remove" @click="removeFromCart(item.course.id)">Remove</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="total-row">
+          <div>Total</div>
+          <div>{{ formatPrice(cartTotal) }}</div>
+        </div>
+
+        <div style="display: flex; gap: 8px; margin-top: 10px">
+          <button :disabled="cartItems.length === 0" @click="checkout">Checkout</button>
+          <button class="ghost" @click="clearCart" :disabled="cartItems.length === 0">Clear</button>
+        </div>
+
+        <hr style="margin: 12px 0" />
+
+        <div style="font-weight: 700; margin-bottom: 8px">Add Course (admin)</div>
+        <form class="add-form" @submit.prevent="submitAdd">
+          <input type="text" v-model="newCourse.title" placeholder="Title" required />
+          <input type="text" v-model="newCourse.instructor" placeholder="Instructor" required />
+          <input type="text" v-model="newCourse.subject" placeholder="Subject" required />
+          <input type="text" v-model="newCourse.location" placeholder="Location" required />
+          <div class="row">
+            <input type="number" v-model.number="newCourse.price" placeholder="Price" min="0" required />
+            <input
+              type="number"
+              v-model.number="newCourse.rating"
+              step="0.1"
+              min="0"
+              max="5"
+              placeholder="Rating"
+              required
+            />
+          </div>
+          <input type="text" v-model="newCourse.category" placeholder="Category" required />
+          <input type="number" v-model.number="newCourse.spaces" min="0" placeholder="Spaces" required />
+          <button type="submit">Add Course</button>
+        </form>
+      </aside>
+    </main>
+  </div>
+
+  <script>
+    const { createApp, reactive, computed, watch, toRefs } = Vue;
+
+    createApp({
+      setup() {
+        const sampleCourses = [
+          {
+            id: 1,
+            title: "JavaScript Basics",
+            instructor: "Jane Doe",
+            subject: "JavaScript",
+            location: "Nigeria",
+            price: 200,
+            rating: 4.8,
+            category: "Programming",
+            spaces: 5,
+          },
+          {
+            id: 2,
+            title: "Vue.js Deep Dive",
+            instructor: "John Smith",
+            subject: "JavaScript",
+            location: "USA",
+            price: 150,
+            rating: 4.7,
+            category: "Programming",
+            spaces: 10,
+          },
+          {
+            id: 3,
+            title: "Graphic Design Fundamentals",
+            instructor: "Alice Johnson",
+            subject: "Design",
+            location: "UK",
+            price: 120,
+            rating: 4.6,
+            category: "Design",
+            spaces: 7,
+          },
+          {
+            id: 4,
+            title: "Digital Marketing 101",
+            instructor: "Bob Lee",
+            subject: "Marketing",
+            location: "Canada",
+            price: 100,
+            rating: 4.5,
+            category: "Marketing",
+            spaces: 3,
+          },
+          {
+            id: 4,
+            title: "The gods are not to be blame",
+            instructor: "Adewale Sanya",
+            subject: "Arts",
+            location: "Nigeria",
+            price: 145,
+            rating: 4.7,
+            category: "Arts",
+            spaces: 12,
+          },
+        ];
+
+        const persistedCourses = JSON.parse(localStorage.getItem("courses_v1") || "null");
+        const courses = reactive(
+          persistedCourses && persistedCourses.length ? persistedCourses : sampleCourses.slice()
+        );
+
+        const initialCart = JSON.parse(localStorage.getItem("cart_v1") || "[]");
+        const cart = reactive(
+          initialCart.map((it) => ({
+            course: courses.find((c) => c.id === it.courseId) || courses[0],
+            qty: it.qty,
+          }))
+        );
+
+        const state = reactive({
+          query: "",
+          selectedCategory: "",
+          sortBy: "featured",
+          showAdd: false,
+          newCourse: {
+            title: "",
+            instructor: "",
+            subject: "",
+            location: "",
+            price: 0,
+            rating: 4.0,
+            category: "",
+            spaces: 0,
+          },
+          modalCourse: {
+            title: "",
+            instructor: "",
+            subject: "",
+            location: "",
+            price: 0,
+            rating: 4.0,
+            category: "",
+            spaces: 0,
+          },
+        });
+
+        const categories = computed(() => {
+          const set = new Set(courses.map((c) => c.category));
+          return Array.from(set);
+        });
+
+        const filteredCourses = computed(() => {
+          let list = courses.filter((c) => {
+            const q = state.query.trim().toLowerCase();
+            const matchQ =
+              !q ||
+              c.title.toLowerCase().includes(q) ||
+              c.instructor.toLowerCase().includes(q);
+            const matchCat = !state.selectedCategory || c.category === state.selectedCategory;
+            return matchQ && matchCat;
+          });
+
+          if (state.sortBy === "subjectAsc")
+            list = [...list].sort((a, b) => a.subject.localeCompare(b.subject));
+          else if (state.sortBy === "subjectDesc")
+            list = [...list].sort((a, b) => b.subject.localeCompare(a.subject));
+          else if (state.sortBy === "locationAsc")
+            list = [...list].sort((a, b) => a.location.localeCompare(b.location));
+          else if (state.sortBy === "locationDesc")
+            list = [...list].sort((a, b) => b.location.localeCompare(a.location));
+          else if (state.sortBy === "spacesAsc") list = [...list].sort((a, b) => a.spaces - b.spaces);
+          else if (state.sortBy === "spacesDesc") list = [...list].sort((a, b) => b.spaces - a.spaces);
+          else if (state.sortBy === "priceAsc") list = [...list].sort((a, b) => a.price - b.price);
+          else if (state.sortBy === "priceDesc") list = [...list].sort((a, b) => b.price - a.price);
+          else if (state.sortBy === "ratingAsc") list = [...list].sort((a, b) => a.rating - b.rating);
+          else if (state.sortBy === "ratingDesc") list = [...list].sort((a, b) => b.rating - a.rating);
+
+          return list;
+        });
+
+        function formatPrice(n) {
+          return new Intl.NumberFormat(undefined, {
+            style: "currency",
+            currency: "USD",
+          }).format(n);
+        }
+
+        function saveCart() {
+          const toSave = cart.map((it) => ({ courseId: it.course.id, qty: it.qty }));
+          localStorage.setItem("cart_v1", JSON.stringify(toSave));
+        }
+        function saveCourses() {
+          localStorage.setItem("courses_v1", JSON.stringify(courses));
+        }
+
+        function addToCart(course) {
+          if (course.spaces <= 0) {
+            alert("No spaces left for this course.");
+            return;
+          }
+          const existing = cart.find((it) => it.course.id === course.id);
+          if (existing) {
+            if (course.spaces <= 0) {
+              alert("No more spaces left for this course.");
+              return;
+            }
+            existing.qty++;
+          } else {
+            cart.push({ course, qty: 1 });
+          }
+          course.spaces--;
+          saveCart();
+          saveCourses();
+        }
+        function increaseQty(courseId) {
+          const it = cart.find((x) => x.course.id === courseId);
+          if (it) {
+            if (it.course.spaces <= 0) {
+              alert("No more spaces left for this course.");
+              return;
+            }
+            it.qty++;
+            it.course.spaces--;
+            saveCart();
+            saveCourses();
+          }
+        }
+        function decreaseQty(courseId) {
+          const it = cart.find((x) => x.course.id === courseId);
+          if (it) {
+            it.qty--;
+            it.course.spaces++;
+            if (it.qty <= 0) {
+              const idx = cart.indexOf(it);
+              if (idx >= 0) cart.splice(idx, 1);
+            }
+            saveCart();
+            saveCourses();
+          }
+        }
+        function removeFromCart(courseId) {
+          const idx = cart.findIndex((x) => x.course.id === courseId);
+          if (idx >= 0) {
+            const item = cart[idx];
+            item.course.spaces += item.qty;
+            cart.splice(idx, 1);
+            saveCourses();
+            saveCart();
+          }
+        }
+        function clearCart() {
+          if (!confirm("Clear the cart?")) return;
+          cart.forEach((item) => {
+            item.course.spaces += item.qty;
+          });
+          cart.splice(0, cart.length);
+          saveCart();
+          saveCourses();
+        }
+        function checkout() {
+          if (cart.length === 0) return alert("Cart is empty");
+          alert("Checkout successful! Total: " + formatPrice(cartTotal.value));
+          cart.splice(0, cart.length);
+          saveCart();
+          saveCourses();
+        }
+
+        function submitAdd() {
+          const nc = {
+            ...state.newCourse,
+            id: courses.length ? Math.max(...courses.map((c) => c.id)) + 1 : 1,
+          };
+          nc.price = Number(nc.price);
+          nc.rating = Number(nc.rating);
+          nc.spaces = Number(nc.spaces);
+          courses.push(nc);
+          state.newCourse = {
+            title: "",
+            instructor: "",
+            subject: "",
+            location: "",
+            price: 0,
+            rating: 4.0,
+            category: "",
+            spaces: 0,
+          };
+          saveCourses();
+          alert("Course added");
+        }
+
+        function removeCourse(courseId) {
+          const index = courses.findIndex((c) => c.id === courseId);
+          if (index !== -1) {
+            courses.splice(index, 1);
+            saveCourses();
+            Swal.fire({
+              title: "Success!",
+              text: "Course removed successfully.",
+              icon: "success",
+              timer: 1500,
+              showConfirmButton: false,
+            });
+          }
+        }
+
+        watch(courses, () => saveCourses(), { deep: true });
+
+        const cartItems = computed(() => cart);
+        const cartTotal = computed(() =>
+          cart.reduce((s, it) => s + it.course.price * it.qty, 0)
+        );
+
+        return {
+          ...toRefs(state),
+          courses,
+          categories,
+          filteredCourses,
+          formatPrice,
+          removeCourse,
+          addToCart,
+          increaseQty,
+          decreaseQty,
+          removeFromCart,
+          clearCart,
+          checkout,
+          cartItems,
+          cartTotal,
+          submitAdd,
+        };
+      },
+    }).mount("#app");
+  </script>
+</body>
+</html>
