@@ -238,7 +238,7 @@
   </div>
 
   <script>
-    const { createApp, reactive, computed, toRefs, ref, watch } = Vue;
+    const { createApp, reactive, computed, ref } = Vue;
 
     createApp({
       setup() {
@@ -287,17 +287,60 @@
         const cartTotal = computed(() => cartItems.reduce((sum, item) => sum + item.course.price * item.qty, 0));
 
         function addToCart(course) {
+          if (course.spaces === 0) {
+            Swal.fire({
+              icon: "info",
+              title: "No Spaces Left",
+              text: `Sorry, "${course.title}" has no spaces left.`,
+            });
+            return;
+          }
+
           const existing = cartItems.find(i => i.course.id === course.id);
           if (existing) {
             existing.qty++;
           } else {
             cartItems.push({ course, qty: 1 });
           }
+
+          // Reduce spaces count
+          course.spaces--;
+
+          // If spaces now zero, alert "course has finished"
+          if (course.spaces === 0) {
+            Swal.fire({
+              icon: "success",
+              title: "Course Full",
+              text: `All spaces for "${course.title}" have been taken.`,
+            });
+          }
         }
 
-        function removeCourse(id) {
-          const idx = courses.findIndex(c => c.id === id);
-          if (idx !== -1) courses.splice(idx, 1);
+        // Updated removeCourse with confirmation and custom messages
+        async function removeCourse(id) {
+          const course = courses.find(c => c.id === id);
+          if (!course) return;
+
+          const result = await Swal.fire({
+            title: "Are you sure?",
+            text: `Do you want to remove "${course.title}"?`,
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#e53e3e",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Yes, remove it!",
+            cancelButtonText: "No, keep it"
+          });
+
+          if (result.isConfirmed) {
+            const idx = courses.findIndex(c => c.id === id);
+            if (idx !== -1) {
+              courses.splice(idx, 1);
+              await Swal.fire("Course removed", `"${course.title}" has been removed.`, "success");
+            }
+          } else {
+            await Swal.fire("Course not removed", `"${course.title}" was not removed.`, "info");
+          }
         }
 
         function clearCart() {
@@ -333,19 +376,22 @@
             price: Number(newCourse.price),
             rating: Number(newCourse.rating),
             category: newCourse.category.trim(),
-            spaces: Number(newCourse.spaces)
+            spaces: Number(newCourse.spaces),
           });
-          // Reset form
-          newCourse.title = "";
-          newCourse.instructor = "";
-          newCourse.subject = "";
-          newCourse.location = "";
-          newCourse.price = 0;
-          newCourse.rating = 0;
-          newCourse.category = "";
-          newCourse.spaces = 0;
+
+          // Reset form and hide modal
+          Object.assign(newCourse, {
+            title: "",
+            instructor: "",
+            subject: "",
+            location: "",
+            price: 0,
+            rating: 0,
+            category: "",
+            spaces: 0
+          });
           showAdd.value = false;
-          Swal.fire("Added!", "New course added.", "success");
+          Swal.fire("Course Added", "The new course has been added successfully.", "success");
         }
 
         return {
@@ -355,9 +401,9 @@
           selectedSort,
           showAdd,
           newCourse,
-          cartItems,
           categories,
           filteredCourses,
+          cartItems,
           cartTotal,
           addToCart,
           removeCourse,
@@ -365,9 +411,9 @@
           checkout,
           formatPrice,
           getImageUrl,
-          submitAdd
+          submitAdd,
         };
-      }
+      },
     }).mount("#app");
   </script>
 </body>
