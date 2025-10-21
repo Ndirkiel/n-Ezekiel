@@ -106,7 +106,7 @@
       max-height: 80vh;
       overflow: auto;
     }
-    .cart-item { display: flex; gap: 10px; margin-bottom: 10px; }
+    .cart-item { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
     .cart-thumb img {
       width: 56px; height: 72px;
       border-radius: 6px; object-fit: cover;
@@ -167,6 +167,7 @@
     </header>
 
     <main>
+      <!-- ===== Main Course Section ===== -->
       <section>
         <div style="margin-bottom:10px;font-weight:600">{{ filteredCourses.length }} courses found</div>
         <div class="course-grid">
@@ -182,30 +183,33 @@
               <div>Location: {{ course.location }}</div>
               <div>Category: {{ course.category }}</div>
               <div>Spaces: {{ course.spaces }}</div>
-              <div style="margin-top:6px;display:flex;gap:6px">
-                <button @click="addToCart(course)" :disabled="course.spaces === 0">Add</button>
-                <button style="background: var(--danger)" @click="removeCourse(course.id)">Remove</button>
+              <div style="margin-top:6px">
+                <button @click="addToCart(course)" :disabled="course.spaces === 0">Add to Cart</button>
               </div>
             </div>
           </div>
         </div>
       </section>
 
+      <!-- ===== Cart Section ===== -->
       <aside class="cart">
         <h3>Cart</h3>
         <div v-if="cartItems.length === 0" style="color: var(--muted)">Your cart is empty</div>
+
         <div v-for="item in cartItems" :key="item.course.id" class="cart-item">
           <div class="cart-thumb">
             <img :src="getImageUrl(item.course)" :alt="item.course.title" />
           </div>
-          <div>
+          <div style="flex:1">
             <div style="font-weight:600">{{ item.course.title }}</div>
             <div style="font-size:13px;color:var(--muted)">{{ item.course.instructor }}</div>
             <div style="margin-top:4px">
               Qty: {{ item.qty }} × {{ formatPrice(item.course.price) }}
             </div>
           </div>
+          <button style="background:var(--danger);padding:4px 8px" @click="confirmRemoveFromCart(item.course.id)">Remove</button>
         </div>
+
         <div class="total-row">
           <div>Total</div>
           <div>{{ formatPrice(cartTotal) }}</div>
@@ -217,6 +221,7 @@
       </aside>
     </main>
 
+    <!-- ===== Add Course Modal ===== -->
     <div v-if="showAdd" class="modal" @click.self="showAdd = false">
       <div class="modal-content">
         <h3>Add New Course</h3>
@@ -245,8 +250,8 @@
           { id: 1, title: "Intro to JavaScript", instructor: "John Doe", subject: "JavaScript", location: "Brazil", price: 49.99, rating: 4.5, category: "Programming", spaces: 3 },
           { id: 2, title: "Advanced CSS Design", instructor: "Jane Smith", subject: "CSS", location: "UK", price: 59.99, rating: 4.7, category: "Design", spaces: 2 },
           { id: 3, title: "Marketing 101", instructor: "Emily Johnson", subject: "Marketing", location: "London", price: 39.99, rating: 4.0, category: "Marketing", spaces: 4 },
-          { id: 4, title: "Arts ", instructor: "Adewala Sanya", subject: "Literature", location: "Nigeria", price: 37.99, rating: 4.2, category: "Arts", spaces: 14 },
-          { id: 3, title: "Graphic", instructor: "Ezekiel Sanya", subject: "Dasign", location: "Nigeria", price: 65, rating: 4.9, category: "Design", spaces: 7 },
+          { id: 4, title: "Arts", instructor: "Adewala Sanya", subject: "Literature", location: "Nigeria", price: 37.99, rating: 4.2, category: "Arts", spaces: 14 },
+          { id: 5, title: "Graphic Design", instructor: "Ezekiel Sanya", subject: "Design", location: "Nigeria", price: 65, rating: 4.9, category: "Design", spaces: 7 },
         ];
 
         const courses = reactive(sampleCourses.slice());
@@ -288,49 +293,43 @@
             const existing = cartItems.find(i => i.course.id === course.id);
             if (existing) existing.qty++;
             else cartItems.push({ course, qty: 1 });
-
-            const allSoldOut = courses.every(c => c.spaces === 0);
-            if (allSoldOut) {
-              Swal.fire("All courses full!", "All spaces are taken. Your cart will now be emptied.", "info");
-              clearCart();
-            }
           } else {
             Swal.fire("No more spaces!", `The course "${course.title}" is now full.`, "warning");
           }
         }
 
-        // ✅ Updated removeCourse with SweetAlert confirmation
-        async function removeCourse(id) {
-          const course = courses.find(c => c.id === id);
-          if (!course) return;
-
+        // ✅ Confirmation before removing from cart
+        async function confirmRemoveFromCart(id) {
+          const item = cartItems.find(i => i.course.id === id);
+          if (!item) return;
           const result = await Swal.fire({
-            title: `Remove "${course.title}"?`,
-            text: "Are you sure you want to delete this course? This action cannot be undone.",
+            title: `Remove "${item.course.title}"?`,
+            text: "Are you sure you want to remove this item from your cart?",
             icon: "warning",
             showCancelButton: true,
             confirmButtonColor: "#e53e3e",
             cancelButtonColor: "#2b6cb0",
-            confirmButtonText: "Yes, remove it!",
+            confirmButtonText: "Yes, remove it",
             cancelButtonText: "Cancel"
           });
-
           if (result.isConfirmed) {
-            // remove from main list
-            const idx = courses.findIndex(c => c.id === id);
-            if (idx !== -1) courses.splice(idx, 1);
+            removeFromCart(id);
+          }
+        }
 
-            // also remove from cart if present
-            const cartIdx = cartItems.findIndex(i => i.course.id === id);
-            if (cartIdx !== -1) cartItems.splice(cartIdx, 1);
-
-            Swal.fire("Removed!", `"${course.title}" has been deleted.`, "success");
-          } else {
-            Swal.fire("Cancelled", "Course was not removed.", "info");
+        // Remove from cart only (no confirmation here, called after confirm)
+        function removeFromCart(id) {
+          const index = cartItems.findIndex(i => i.course.id === id);
+          if (index !== -1) {
+            const item = cartItems[index];
+            item.course.spaces += item.qty;
+            cartItems.splice(index, 1);
+            Swal.fire("Removed!", `"${item.course.title}" was removed from your cart.`, "success");
           }
         }
 
         function clearCart() {
+          cartItems.forEach(i => i.course.spaces += i.qty);
           cartItems.length = 0;
         }
 
@@ -373,8 +372,8 @@
         return {
           courses, query, selectedCategory, selectedSort, showAdd,
           newCourse, cartItems, categories, filteredCourses, cartTotal,
-          addToCart, removeCourse, clearCart, checkout,
-          formatPrice, getImageUrl, submitAdd
+          addToCart, confirmRemoveFromCart, removeFromCart,
+          clearCart, checkout, formatPrice, getImageUrl, submitAdd
         };
       }
     }).mount("#app");
