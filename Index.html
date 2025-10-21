@@ -7,7 +7,6 @@
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
   <style>
     :root {
       --accent: #2b6cb0;
@@ -18,7 +17,7 @@
     }
     body {
       margin: 0;
-      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
       background: var(--bg);
       color: #222;
     }
@@ -39,8 +38,10 @@
     .logo {
       width: 48px; height: 48px;
       background: linear-gradient(135deg, var(--accent), #6bb6ff);
-      border-radius: 8px; display: flex;
-      align-items: center; justify-content: center;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       color: #fff; font-weight: bold;
     }
     .controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
@@ -70,7 +71,7 @@
     }
     .course-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(220px,1fr));
       gap: 14px;
     }
     .card {
@@ -86,6 +87,7 @@
       height: 140px;
       border-radius: 8px;
       object-fit: cover;
+      background: #ddd;
     }
     .course-info {
       display: flex;
@@ -108,6 +110,7 @@
     .cart-thumb img {
       width: 56px; height: 72px;
       border-radius: 6px; object-fit: cover;
+      background: #ddd;
     }
     .total-row {
       display: flex;
@@ -115,8 +118,6 @@
       font-weight: 700;
       margin-top: 10px;
     }
-
-    /* Modal styles */
     .modal {
       position: fixed;
       inset: 0;
@@ -135,11 +136,9 @@
       flex-direction: column;
       gap: 10px;
     }
-
     @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
   </style>
 </head>
-
 <body>
   <div id="app" class="container">
     <header>
@@ -147,18 +146,15 @@
         <div class="logo">NK</div>
         <div>
           <div style="font-weight:700">N-kiel Course Store</div>
-          <div style="font-size:12px;color:var(--muted)">Single-page demo</div>
+          <div style="font-size:12px;color:var(--muted)">Vue 3 Single Page Demo</div>
         </div>
       </div>
-
       <div class="controls">
-        <input type="search" v-model="query" placeholder="Search..." />
+        <input type="search" v-model="query" placeholder="Search…" />
         <select v-model="selectedCategory">
           <option value="">All categories</option>
           <option v-for="c in categories" :key="c">{{ c }}</option>
         </select>
-
-        <!-- ✅ Sorting dropdown -->
         <select v-model="selectedSort">
           <option value="">Sort by</option>
           <option value="title">Title (A–Z)</option>
@@ -166,7 +162,6 @@
           <option value="priceDesc">Price (High → Low)</option>
           <option value="ratingDesc">Rating (High → Low)</option>
         </select>
-
         <button @click="showAdd = true">Add Course</button>
       </div>
     </header>
@@ -174,39 +169,34 @@
     <main>
       <section>
         <div style="margin-bottom:10px;font-weight:600">{{ filteredCourses.length }} courses found</div>
-
         <div class="course-grid">
           <div class="card" v-for="course in filteredCourses" :key="course.id">
             <div class="course-image">
-              <img :src="getImageUrl(course.id, course.subject)" :alt="course.title" />
+              <img :src="getImageUrl(course)" :alt="course.title" />
             </div>
             <div class="course-info">
               <div class="course-title">{{ course.title }}</div>
               <div class="course-instructor">by {{ course.instructor }}</div>
               <div class="price">{{ formatPrice(course.price) }}</div>
               <div>Rating: {{ course.rating.toFixed(1) }}</div>
-              <div>Subject: {{ course.subject }}</div>
+              <div>Location: {{ course.location }}</div>
+              <div>Category: {{ course.category }}</div>
               <div>Spaces: {{ course.spaces }}</div>
               <div style="margin-top:6px;display:flex;gap:6px">
-                <button @click="addToCart(course)" :disabled="course.spaces===0">Add</button>
-                <button style="background:#e53e3e" @click="removeCourse(course.id)">Remove</button>
+                <button @click="addToCart(course)" :disabled="course.spaces === 0">Add</button>
+                <button style="background: var(--danger)" @click="removeCourse(course.id)">Remove</button>
               </div>
             </div>
           </div>
-        </div>
-
-        <div v-if="filteredCourses.length===0" style="padding:10px;text-align:center;color:var(--muted)">
-          No courses found
         </div>
       </section>
 
       <aside class="cart">
         <h3>Cart</h3>
-        <div v-if="cartItems.length===0" style="color:var(--muted)">Your cart is empty</div>
-
+        <div v-if="cartItems.length === 0" style="color: var(--muted)">Your cart is empty</div>
         <div v-for="item in cartItems" :key="item.course.id" class="cart-item">
           <div class="cart-thumb">
-            <img :src="getImageUrl(item.course.id, item.course.subject)" :alt="item.course.title" />
+            <img :src="getImageUrl(item.course)" :alt="item.course.title" />
           </div>
           <div>
             <div style="font-weight:600">{{ item.course.title }}</div>
@@ -216,21 +206,18 @@
             </div>
           </div>
         </div>
-
         <div class="total-row">
           <div>Total</div>
           <div>{{ formatPrice(cartTotal) }}</div>
         </div>
-
         <div style="margin-top:10px;display:flex;gap:6px">
-          <button :disabled="cartItems.length===0" @click="checkout">Checkout</button>
-          <button class="ghost" :disabled="cartItems.length===0" @click="clearCart">Clear</button>
+          <button :disabled="cartItems.length === 0" @click="checkout">Checkout</button>
+          <button class="ghost" :disabled="cartItems.length === 0" @click="clearCart">Clear</button>
         </div>
       </aside>
     </main>
 
-    <!-- ✅ Add Course Modal -->
-    <div v-if="showAdd" class="modal">
+    <div v-if="showAdd" class="modal" @click.self="showAdd = false">
       <div class="modal-content">
         <h3>Add New Course</h3>
         <input v-model="newCourse.title" placeholder="Course title" />
@@ -242,7 +229,7 @@
         <input v-model.number="newCourse.spaces" type="number" placeholder="Spaces available" />
         <input v-model="newCourse.category" placeholder="Category" />
         <div style="display:flex;justify-content:end;gap:8px;margin-top:10px">
-          <button class="ghost" @click="showAdd=false">Cancel</button>
+          <button class="ghost" @click="showAdd = false">Cancel</button>
           <button @click="submitAdd">Add</button>
         </div>
       </div>
@@ -250,110 +237,145 @@
   </div>
 
   <script>
-    const { createApp, reactive, computed, toRefs, watch } = Vue;
+    const { createApp, reactive, computed, ref } = Vue;
 
     createApp({
       setup() {
         const sampleCourses = [
-          { id: 1, title: "JavaScript Basics", instructor: "Jane Doe", subject: "JavaScript", location: "Nigeria", price: 200, rating: 4.8, category: "Programming", spaces: 5 },
-          { id: 2, title: "Vue.js Deep Dive", instructor: "John Smith", subject: "JavaScript", location: "USA", price: 150, rating: 4.7, category: "Programming", spaces: 10 },
-          { id: 3, title: "Graphic Design Fundamentals", instructor: "Alice Johnson", subject: "Design", location: "UK", price: 120, rating: 4.6, category: "Design", spaces: 7 },
-          { id: 4, title: "Digital Marketing 101", instructor: "Bob Lee", subject: "Marketing", location: "Canada", price: 100, rating: 4.5, category: "Marketing", spaces: 3 },
-          { id: 5, title: "The Gods Are Not to Be Blame", instructor: "Adewale Sanya", subject: "Arts", location: "Nigeria", price: 145, rating: 4.7, category: "Arts", spaces: 12 },
+          { id: 1, title: "Intro to JavaScript", instructor: "John Doe", subject: "JavaScript", location: "Brazil", price: 49.99, rating: 4.5, category: "Programming", spaces: 3 },
+          { id: 2, title: "Advanced CSS Design", instructor: "Jane Smith", subject: "CSS", location: "UK", price: 59.99, rating: 4.7, category: "Design", spaces: 2 },
+          { id: 3, title: "Marketing 101", instructor: "Emily Johnson", subject: "Marketing", location: "London", price: 39.99, rating: 4.0, category: "Marketing", spaces: 4 },
+          { id: 4, title: "Arts ", instructor: "Adewala Sanya", subject: "Literature", location: "Nigeria", price: 37.99, rating: 4.2, category: "Arts", spaces: 14 },
+          { id: 3, title: "Graphic", instructor: "Ezekiel Sanya", subject: "Dasign", location: "Nigeria", price: 65, rating: 4.9, category: "Design", spaces: 7 },
         ];
 
-        const persistedCourses = JSON.parse(localStorage.getItem("courses_v1") || "null");
-        const courses = reactive(persistedCourses?.length ? persistedCourses : sampleCourses.slice());
+        const courses = reactive(sampleCourses.slice());
+        const query = ref("");
+        const selectedCategory = ref("");
+        const selectedSort = ref("");
+        const showAdd = ref(false);
+        const cartItems = reactive([]);
 
-        const initialCart = JSON.parse(localStorage.getItem("cart_v1") || "[]");
-        const cart = reactive(initialCart.map(it => ({
-          course: courses.find(c => c.id === it.courseId) || courses[0],
-          qty: it.qty,
-        })));
-
-        const state = reactive({
-          query: "",
-          selectedCategory: "",
-          selectedSort: "",
-          showAdd: false,
-          newCourse: { title: "", instructor: "", subject: "", location: "", price: 0, rating: 4, category: "", spaces: 0 },
+        const newCourse = reactive({
+          title: "", instructor: "", subject: "", location: "",
+          price: 0, rating: 0, category: "", spaces: 0
         });
 
         const categories = computed(() => Array.from(new Set(courses.map(c => c.category))));
 
         const filteredCourses = computed(() => {
-          const q = state.query.trim().toLowerCase();
+          const q = query.value.trim().toLowerCase();
           let list = courses.filter(c =>
             (!q || c.title.toLowerCase().includes(q) || c.instructor.toLowerCase().includes(q)) &&
-            (!state.selectedCategory || c.category === state.selectedCategory)
+            (!selectedCategory.value || c.category === selectedCategory.value)
           );
-
-          // ✅ Sorting logic
-          switch (state.selectedSort) {
-            case "title":
-              list = [...list].sort((a, b) => a.title.localeCompare(b.title));
-              break;
-            case "priceAsc":
-              list = [...list].sort((a, b) => a.price - b.price);
-              break;
-            case "priceDesc":
-              list = [...list].sort((a, b) => b.price - a.price);
-              break;
-            case "ratingDesc":
-              list = [...list].sort((a, b) => b.rating - a.rating);
-              break;
+          switch (selectedSort.value) {
+            case "title": list.sort((a, b) => a.title.localeCompare(b.title)); break;
+            case "priceAsc": list.sort((a, b) => a.price - b.price); break;
+            case "priceDesc": list.sort((a, b) => b.price - a.price); break;
+            case "ratingDesc": list.sort((a, b) => b.rating - a.rating); break;
           }
           return list;
         });
 
-        const formatPrice = n => new Intl.NumberFormat(undefined, { style: "currency", currency: "USD" }).format(n);
-        const saveCourses = () => localStorage.setItem("courses_v1", JSON.stringify(courses));
-        const saveCart = () => localStorage.setItem("cart_v1", JSON.stringify(cart.map(it => ({ courseId: it.course.id, qty: it.qty }))));
+        const cartTotal = computed(() =>
+          cartItems.reduce((sum, item) => sum + item.course.price * item.qty, 0)
+        );
 
         function addToCart(course) {
-          if (course.spaces <= 0) return alert("No spaces left");
-          const existing = cart.find(it => it.course.id === course.id);
-          if (existing) existing.qty++;
-          else cart.push({ course, qty: 1 });
-          course.spaces--;
-          saveCart(); saveCourses();
-        }
+          if (course.spaces > 0) {
+            course.spaces--;
+            const existing = cartItems.find(i => i.course.id === course.id);
+            if (existing) existing.qty++;
+            else cartItems.push({ course, qty: 1 });
 
-        function clearCart() { cart.splice(0, cart.length); saveCart(); }
-        function checkout() { Swal.fire("Checkout complete!", "Thank you!", "success"); cart.splice(0, cart.length); saveCart(); }
-
-        function removeCourse(id) {
-          const idx = courses.findIndex(c => c.id === id);
-          if (idx >= 0) {
-            courses.splice(idx, 1);
-            saveCourses();
-            Swal.fire({ title: "Deleted!", text: "Course removed.", icon: "success", timer: 1200, showConfirmButton: false });
+            const allSoldOut = courses.every(c => c.spaces === 0);
+            if (allSoldOut) {
+              Swal.fire("All courses full!", "All spaces are taken. Your cart will now be emptied.", "info");
+              clearCart();
+            }
+          } else {
+            Swal.fire("No more spaces!", `The course "${course.title}" is now full.`, "warning");
           }
         }
 
-        function submitAdd() {
-          const nc = { ...state.newCourse };
-          if (!nc.title || !nc.instructor) return Swal.fire("Error", "Please fill in required fields!", "error");
-          nc.id = courses.length ? Math.max(...courses.map(c => c.id)) + 1 : 1;
-          courses.push(nc);
-          saveCourses();
-          state.newCourse = { title: "", instructor: "", subject: "", location: "", price: 0, rating: 4, category: "", spaces: 0 };
-          state.showAdd = false;
-          Swal.fire("Success!", "New course added!", "success");
+        // ✅ Updated removeCourse with SweetAlert confirmation
+        async function removeCourse(id) {
+          const course = courses.find(c => c.id === id);
+          if (!course) return;
+
+          const result = await Swal.fire({
+            title: `Remove "${course.title}"?`,
+            text: "Are you sure you want to delete this course? This action cannot be undone.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#e53e3e",
+            cancelButtonColor: "#2b6cb0",
+            confirmButtonText: "Yes, remove it!",
+            cancelButtonText: "Cancel"
+          });
+
+          if (result.isConfirmed) {
+            // remove from main list
+            const idx = courses.findIndex(c => c.id === id);
+            if (idx !== -1) courses.splice(idx, 1);
+
+            // also remove from cart if present
+            const cartIdx = cartItems.findIndex(i => i.course.id === id);
+            if (cartIdx !== -1) cartItems.splice(cartIdx, 1);
+
+            Swal.fire("Removed!", `"${course.title}" has been deleted.`, "success");
+          } else {
+            Swal.fire("Cancelled", "Course was not removed.", "info");
+          }
         }
 
-        const cartItems = computed(() => cart);
-        const cartTotal = computed(() => cart.reduce((s, it) => s + it.course.price * it.qty, 0));
+        function clearCart() {
+          cartItems.length = 0;
+        }
 
-        function getImageUrl(courseId, subject) {
-          const seed = encodeURIComponent(subject || "learning") + "-" + courseId;
+        function checkout() {
+          Swal.fire("Checkout complete!", "Thank you for your purchase!", "success");
+          clearCart();
+        }
+
+        function formatPrice(value) {
+          return `$${value.toFixed(2)}`;
+        }
+
+        function getImageUrl(course) {
+          const seed = encodeURIComponent(`${course.title}-${course.category}-${course.id}`);
           return `https://picsum.photos/seed/${seed}/600/400`;
         }
 
-        watch(courses, saveCourses, { deep: true });
+        function submitAdd() {
+          if (!newCourse.title.trim() || !newCourse.instructor.trim()) {
+            Swal.fire("Error", "Please fill in the required fields.", "error");
+            return;
+          }
+          const newId = courses.length ? Math.max(...courses.map(c => c.id)) + 1 : 1;
+          courses.push({
+            id: newId,
+            title: newCourse.title.trim(),
+            instructor: newCourse.instructor.trim(),
+            subject: newCourse.subject.trim(),
+            location: newCourse.location.trim(),
+            price: Number(newCourse.price),
+            rating: Number(newCourse.rating),
+            category: newCourse.category.trim(),
+            spaces: Number(newCourse.spaces)
+          });
+          Object.keys(newCourse).forEach(k => newCourse[k] = "");
+          showAdd.value = false;
+          Swal.fire("Added!", "New course added.", "success");
+        }
 
-        return { ...toRefs(state), courses, categories, filteredCourses, cartItems, cartTotal,
-                 addToCart, clearCart, checkout, removeCourse, submitAdd, getImageUrl, formatPrice };
+        return {
+          courses, query, selectedCategory, selectedSort, showAdd,
+          newCourse, cartItems, categories, filteredCourses, cartTotal,
+          addToCart, removeCourse, clearCart, checkout,
+          formatPrice, getImageUrl, submitAdd
+        };
       }
     }).mount("#app");
   </script>
